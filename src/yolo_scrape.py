@@ -9,7 +9,7 @@ import pandas as pd
 import configparser
 
 class WSB_Scraper:
-    def __init__(self, credentials, time_max, time_min, save_path):
+    def __init__(self, credentials, time_max, time_min, save_path, resume=False):
 
         # setup API stuff
         client_id, client_secret, user_agent = credentials
@@ -25,7 +25,7 @@ class WSB_Scraper:
 
         # setup save config stuff
         self.save_path = save_path
-        if os.path.exists(self.save_path):
+        if os.path.exists(self.save_path) and resume == False:
             new_path = os.path.splitext(save_path)[0]+"old.csv"
             os.rename(save_path, new_path)
 
@@ -33,7 +33,7 @@ class WSB_Scraper:
         # get ids within date range from Pushshift API, we do this first because we can sort by date
         results = list(self.ps_api.search_submissions(before=self.time_curr,
                                                       subreddit='wallstreetbets',
-                                                      limit=10))
+                                                      limit=100))
 
         # next, we take the ids we parsed and make a reddit api call so we have updated info on scores, etc
         # this is because Pushshift gets posts at time of posting but doesn't track them afterwards (I think?)
@@ -69,6 +69,13 @@ class WSB_Scraper:
         logging.info("Saving dataframe...\n")
         self.SaveDF(result_df)
         self.CheckDone()
+
+    def ResumeProgress(self):
+        # sometimes it is convenient to stop progress then resume, this reads most recent time stamp of csv
+        df = pd.read_csv(self.save_path)
+        self.curr_time = df.iloc[-1].created_utc
+        self.CheckDone()
+        
 
     def SaveDF(self, df):
         if os.path.exists(self.save_path):
@@ -109,14 +116,17 @@ def GetCredentials():
     return credentials
 
 if __name__ == "__main__":
-    
+
+    user_input = input("resume or restart? (Type, no caps): ")
     credentials = GetCredentials()
     time_max, time_min = GetTimeBounds()
     save_path = os.getcwd()+"/out/WSB_POSTS_MAX{}_MIN{}.csv".format(time_max, time_min)
     log_path = os.getcwd()+"/out/WSB_POSTS_MAX{}_MIN{}.log".format(time_max, time_min)
     logging.basicConfig(filename=log_path,  level=logging.DEBUG)
 
-    scraper = WSB_Scraper(credentials, time_max, time_min, save_path)
-    scraper.API_Call()
-
-
+    if user_input == "resume":
+        scraper = WSB_Scraper(credentials, time_max, time_min, save_path, resume=True)
+        scraper.ResumeProgress()
+    else: 
+        scraper = WSB_Scraper(credentials, time_max, time_min, save_path, resume=False)
+        scraper.API_Call()
