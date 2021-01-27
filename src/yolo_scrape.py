@@ -48,16 +48,22 @@ class WSB_Scraper:
                        'title':[],
                        'selftext':[],
                       }
-        for result in results:
-            print("calling {}".format(result.id))
-            logging.info("calling {}".format(result.id))
+
+        # speed this up with batch ID stuff via
+        #   https://www.reddit.com/r/redditdev/comments/eisdgs/praw_faster_way_to_fetch_posts_by_id/
+        # note there is some FU formatting in the name via
+        #   https://www.reddit.com/r/redditdev/comments/gvlg6q/any_way_to_batch_fetch_commentsposts_by_id_in_praw/fspk3at?utm_source=share&utm_medium=web2x&context=3
+        ids = [result.id for result in results] 
+        creation_utc_list = [result.created_utc for result in results]
+        results = [idx if idx.startswith('t3_') else f't3_{idx}' for idx in ids]
+        print("calling ", results[:3], "...")
     
-            # make submission call from reddit
-            submission = self.r_api.submission(id=result.id)
+        for results_id, submission in enumerate(self.r_api.info(results)):
 
             # unpack information into result_dict
+            print("processing ", submission.id)
             result_dict['id'].append(submission.id)
-            result_dict['created_utc'].append(result.created_utc)  # pushshift has this info, not praw
+            result_dict['created_utc'].append(creation_utc_list[results_id])  # pushshift has this info, not praw
             result_dict['score'].append(submission.score)
             result_dict['upvoteratio'].append(submission.upvote_ratio)
             result_dict['author'].append(submission.author)
