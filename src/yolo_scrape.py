@@ -21,13 +21,19 @@ class WSB_Scraper:
         # setup time stuff
         self.time_max = time_max  # front date (more recent)
         self.time_min = time_min  # how far back to go (in past)
-        self.time_curr = time_max # current timestamp of most recent call
 
         # setup save config stuff
         self.save_path = save_path
-        if os.path.exists(self.save_path) and resume == False:
+        if resume == False:
             new_path = os.path.splitext(save_path)[0]+"old.csv"
             os.rename(save_path, new_path)
+            self.time_curr = time_max # current timestamp of most recent call
+            print("fart")
+      
+        else:
+            print("queef")
+            df = pd.read_csv(self.save_path)
+            self.time_curr = int(df.iloc[-1].created_utc)
 
     def API_Call(self):
         # get ids within date range from Pushshift API, we do this first because we can sort by date
@@ -76,13 +82,6 @@ class WSB_Scraper:
         self.SaveDF(result_df)
         self.CheckDone()
 
-    def ResumeProgress(self):
-        # sometimes it is convenient to stop progress then resume, this reads most recent time stamp of csv
-        df = pd.read_csv(self.save_path)
-        self.curr_time = df.iloc[-1].created_utc
-        self.CheckDone()
-        
-
     def SaveDF(self, df):
         if os.path.exists(self.save_path):
             df.to_csv(save_path, mode='a', header=False, index=False)
@@ -98,7 +97,9 @@ class WSB_Scraper:
             logging.info("Current Time Stamp = {}, making next call".format(self.time_curr))
             print("Current Time Stamp = {}, making next call".format(self.time_curr))
             time.sleep(1)
-            self.API_Call()
+
+    def ReturnCurrTimes(self):
+        return self.time_curr
 
 def GetTimeBounds():
     config = configparser.ConfigParser()
@@ -132,7 +133,9 @@ if __name__ == "__main__":
 
     if user_input == "resume":
         scraper = WSB_Scraper(credentials, time_max, time_min, save_path, resume=True)
-        scraper.ResumeProgress()
     else: 
         scraper = WSB_Scraper(credentials, time_max, time_min, save_path, resume=False)
+    
+    # can't do it recurisvely because of python recursion depth limits
+    while scraper.ReturnCurrTimes() > time_min:
         scraper.API_Call()
