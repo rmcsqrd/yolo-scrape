@@ -25,13 +25,12 @@ class WSB_Scraper:
         # setup save config stuff
         self.save_path = save_path
         if resume == False:
-            new_path = os.path.splitext(save_path)[0]+"old.csv"
-            os.rename(save_path, new_path)
+            if os.path.exists(save_path):
+                new_path = os.path.splitext(save_path)[0]+"old.csv"
+                os.rename(save_path, new_path)
             self.time_curr = time_max # current timestamp of most recent call
-            print("fart")
-      
+
         else:
-            print("queef")
             df = pd.read_csv(self.save_path)
             self.time_curr = int(df.iloc[-1].created_utc)
 
@@ -127,6 +126,11 @@ if __name__ == "__main__":
     user_input = input("resume or restart? (Type, no caps): ")
     credentials = GetCredentials()
     time_max, time_min = GetTimeBounds()
+
+    # handle path stuff
+    if not os.path.exists('out'):
+        os.makedirs('out')
+
     save_path = os.getcwd()+"/out/WSB_POSTS_MAX{}_MIN{}.csv".format(time_max, time_min)
     log_path = os.getcwd()+"/out/WSB_POSTS_MAX{}_MIN{}.log".format(time_max, time_min)
     logging.basicConfig(filename=log_path,  level=logging.DEBUG)
