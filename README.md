@@ -20,4 +20,10 @@ Modify the dates you want to scrape between in `config/config.ini`. The input pa
 ```
     python3 src/yolo_scrape.py
 ```
-You'll have an option to restart or resume the script as prompted by the user input. If you don't have an existing .csv file of previously scraped data, the resume option will not work.
+You'll have an option to restart or resume the script as prompted by the user input. If you don't have an existing .csv file of previously scraped data, the resume option will not work. This saves into a .csv file.
+
+![Example Comparison](https://raw.githubusercontent.com/rmcsqrd/yolo-scrape/master/aux/screenshot.png)
+
+Above is some example output that was created in conjunction with [ryssdal.jl](https://github.com/rmcsqrd/Ryssdal.jl). 
+
+
