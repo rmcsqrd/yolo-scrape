@@ -1,5 +1,5 @@
 # yolo-scrape
-An r/wallstreetbets web scraper.
+An r/wallstreetbets web scraper. [Blog post located here](https://riomcmahon.me/content/yolo-scraper/).
 
 ## Install
 Start by cloning the repository then updating python with dependencies found in requirements.txt
